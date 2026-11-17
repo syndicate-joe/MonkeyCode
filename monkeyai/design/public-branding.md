@@ -43,7 +43,9 @@ PublicLicense(context.Context) (machineCode string, hasCommercialLicense bool, e
 
 每次 branding 请求都会重新调用该接口，不在启动时缓存授权有效性。没有提供此扩展时，机器码返回空字符串，商业授权标记返回 `false`。
 
-**当前工作区缺少宿主扩展源码，实际宿主校验器尚未接入。** 因此这里完成的是公开接口与可选扩展接线，不能据此认定现有商业部署已经返回有效授权标记。
+私有宿主的 `license.Handler` 已实现此接口，复用实际许可证校验，不根据品牌配置推断付费状态。同时实现 `backend/license.Reader`，由宿主扩展装配到身份、设置与云环境服务。
+
+`GET /api/auth/v1/capabilities` 仅公开返回当前生效的 `allow_cloud_computer` 和 `allow_custom_branding`，不包含授权详情。自定义品牌能力关闭时，公开品牌与 Agent 设置返回默认名称，Logo 返回 404；保存名称、上传、替换和清除 Logo 返回 403 `custom_branding_not_licensed`。原配置和图片保留，重新授权后恢复。商业授权标记与品牌能力分别判断，未接入私有授权的开源入口维持原有品牌能力。管理端定期及授权变更后刷新，不缓存到启动时。
 
 ## 首页行为
 

@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chaitin/MonkeyCode/monkeyai/backend/license"
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/member"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -133,6 +134,7 @@ func (s *Service) WithUserWriter(writer member.UserWriter) *Service {
 }
 
 type Service struct {
+	license         license.Reader
 	runtimeAccess   RuntimeAccess
 	device          *deviceAuthorization
 	email           EmailSender

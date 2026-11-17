@@ -1,4 +1,14 @@
 export const enUS = {
+  licenseCapabilities: {
+    cloudComputer: "Cloud computers",
+    customBranding: "Custom branding",
+    granted: "Licensed",
+    notGranted: "Not licensed",
+    cloudLocked:
+      "Cloud computers are not included in the current license. Existing resources can still be viewed, stopped, and deleted.",
+    brandingLocked:
+      "Custom branding is not included in the current license. Saved settings will be restored when licensed again.",
+  },
   kbPermissions: {
     noAccess: "No access",
     readOnly: "Read only",

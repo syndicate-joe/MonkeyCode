@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/resource"
+	"github.com/chaitin/MonkeyCode/monkeyai/backend/license"
 )
 
 var Keys = []string{"branding", "authentication", "email", "billing", "session_reporting", "proxies", "mcp"}
@@ -37,6 +38,7 @@ type Store interface {
 }
 
 type Service struct {
+	license     license.Reader
 	store       Store
 	logoStorage resource.Storage
 	publicURL   string
@@ -54,6 +56,9 @@ func (s *Service) Get(ctx context.Context, key string) (Record, error) {
 }
 
 func (s *Service) GetValue(ctx context.Context, key string) (json.RawMessage, error) {
+	if key == "branding" && !s.customBranding(ctx) {
+		return append(json.RawMessage(nil), defaultBranding...), nil
+	}
 	record, err := s.Get(ctx, key)
 	if errors.Is(err, ErrNotFound) {
 		switch key {
@@ -73,6 +78,9 @@ func (s *Service) List(ctx context.Context) ([]Record, error) {
 }
 
 func (s *Service) Put(ctx context.Context, key string, value json.RawMessage, schemaVersion int, userID string) (Record, error) {
+	if key == "branding" && !s.customBranding(ctx) {
+		return Record{}, ErrBrandingNotLicensed
+	}
 	if !slices.Contains(Keys, key) {
 		return Record{}, ErrUnknownKey
 	}
@@ -269,6 +277,9 @@ func (s *Service) AgentConfig(ctx context.Context) (Config, error) {
 	}
 	if !seenSessionReporting {
 		config.Settings["session_reporting"] = append(json.RawMessage(nil), defaultSessionReporting...)
+	}
+	if !s.customBranding(ctx) {
+		config.Settings["branding"] = append(json.RawMessage(nil), defaultBranding...)
 	}
 	config.Version = config.UpdatedAt.UnixMilli()
 	return config, nil

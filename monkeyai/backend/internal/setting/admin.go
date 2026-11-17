@@ -45,6 +45,9 @@ func (s *Service) RegisterAdmin(router chi.Router) {
 }
 
 func (s *Service) putSetting(w http.ResponseWriter, r *http.Request) {
+	if chi.URLParam(r, "key") == "branding" && !s.requireBranding(w, r) {
+		return
+	}
 	if chi.URLParam(r, "key") == "branding" && strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 		s.saveBrandingForm(w, r)
 		return

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/web"
+	"github.com/chaitin/MonkeyCode/monkeyai/backend/license"
 )
 
 type BrandingLogoReader interface {
@@ -20,7 +21,7 @@ func (s *Service) WithBrandingLogo(reader BrandingLogoReader) *Service {
 }
 
 func (s *Service) logo(w http.ResponseWriter, r *http.Request) {
-	if s.brandingLogo == nil {
+	if !license.Read(r.Context(), s.license).AllowCustomBranding || s.brandingLogo == nil {
 		web.NotFound(w, r)
 		return
 	}

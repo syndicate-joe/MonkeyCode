@@ -83,6 +83,8 @@ func (s *Service) runtimeInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = json.Unmarshal(host.Report, &report)
 	switch {
+	case !s.cloudComputerAllowed(r.Context()):
+		info.Reason = "当前授权不允许使用云电脑"
 	case environment.Desired == "deleted":
 		info.Reason = "环境已删除"
 	case !spec.PersistentContainer || spec.Runtime == nil:
@@ -113,6 +115,9 @@ func (s *Service) runtimeUpgrade(w http.ResponseWriter, r *http.Request) {
 	respond(w, r, 202, out)
 }
 func (s *Service) UpdateRuntime(ctx context.Context, user, id string, in RuntimeUpdate) (Result, error) {
+	if err := s.requireCloudComputer(ctx); err != nil {
+		return Result{}, err
+	}
 	var result Result
 	if !uuid.MatchString(user) || !uuid.MatchString(id) || in.Generation < 1 || !key.MatchString(in.RequestKey) || in.Version != "" && !runtimeVersion.MatchString(in.Version) {
 		return result, bad("runtime 更新参数无效")

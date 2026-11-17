@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/chaitin/MonkeyCode/monkeyai/backend/license"
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/logging"
 )
 
@@ -40,7 +41,8 @@ func (s *Service) branding(w http.ResponseWriter, r *http.Request) {
 		WorkspaceName: defaultWorkspaceName,
 		ProductName:   defaultProductName,
 	}
-	if s.settings != nil {
+	customBranding := license.Read(r.Context(), s.license).AllowCustomBranding
+	if customBranding && s.settings != nil {
 		value, err := s.settings.GetValue(r.Context(), "branding")
 		if err != nil {
 			logging.Event(r.Context(), slog.Default(), slog.LevelError, "identity.request.failed", "读取品牌设置失败，使用默认值", "module", "identity", "operation", "branding", "error", err)
@@ -61,7 +63,7 @@ func (s *Service) branding(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if s.brandingLogo != nil {
+	if customBranding && s.brandingLogo != nil {
 		logoURL, err := s.brandingLogo.BrandingLogoURL(r.Context())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "读取品牌 Logo 失败", "error", err)

@@ -95,7 +95,7 @@ func (s *Service) environmentView(ctx context.Context, e sqlc.Environment) (View
 func (s *Service) environmentViewWithRuntime(ctx context.Context, e sqlc.Environment, runtime sqlc.EnvironmentRuntime) (View, error) {
 	v := withRuntime(view(e), runtime)
 	v.Stale = e.ObservedAt == nil || time.Since(*e.ObservedAt) > 90*time.Second
-	if s.ready != nil && !v.Stale && e.Desired == "running" && e.Phase == "running" && e.Generation == e.ObservedGeneration && runtimeCurrent(e, runtime) {
+	if s.cloudComputerAllowed(ctx) && s.ready != nil && !v.Stale && e.Desired == "running" && e.Phase == "running" && e.Generation == e.ObservedGeneration && runtimeCurrent(e, runtime) {
 		var err error
 		v.RuntimeReady, err = s.ready.RuntimeReady(ctx, e.UserID, *runtime.MachineID)
 		if err != nil {

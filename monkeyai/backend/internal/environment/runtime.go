@@ -45,6 +45,9 @@ type RuntimeReply struct {
 }
 
 func (s *Service) approveRuntime(ctx context.Context, host string, in RuntimeRequest) error {
+	if err := s.requireCloudComputer(ctx); err != nil {
+		return err
+	}
 	public, err := base64.RawURLEncoding.Strict().DecodeString(in.PublicKey)
 	if err != nil || len(public) != 32 || !uuid.MatchString(in.EnvironmentID) || !uuid.MatchString(in.InstanceID) || !uuid.MatchString(in.MachineID) || in.Generation < 1 || len(in.UserCode) > 16 || s.runtime == nil || s.runtime.auth == nil {
 		return bad("运行时授权信息无效")
@@ -119,8 +122,16 @@ func (s *Service) RuntimeAllowed(ctx context.Context, tx pgx.Tx, user, machine s
 	q := sqlc.New(s.pool)
 	if tx != nil {
 		q = sqlc.New(tx)
-		if _, err := q.LockRuntimeEnvironment(ctx, &machine); err != nil {
+	}
+	cloudAllowed := s.cloudComputerAllowed(ctx)
+	if tx != nil || !cloudAllowed {
+		environments, err := q.LockRuntimeEnvironment(ctx, &machine)
+		if err != nil {
 			return false, err
+		}
+		// 普通电脑也经过此入口，只有已绑定云环境的机器受能力开关限制。
+		if len(environments) > 0 && !cloudAllowed {
+			return false, nil
 		}
 	}
 	allowed, err := q.RuntimeAccess(ctx, sqlc.RuntimeAccessParams{UserID: user, MachineID: machine})

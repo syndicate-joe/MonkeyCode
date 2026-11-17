@@ -1,6 +1,16 @@
 import { enUS } from "./en-US.ts"
 
 export const frFR = {
+  licenseCapabilities: {
+    cloudComputer: "Ordinateurs cloud",
+    customBranding: "Personnalisation de la marque",
+    granted: "Autorisé",
+    notGranted: "Non autorisé",
+    cloudLocked:
+      "La licence actuelle ne permet pas les ordinateurs cloud. Les ressources existantes peuvent être consultées, arrêtées et supprimées.",
+    brandingLocked:
+      "La licence actuelle ne permet pas de personnaliser la marque. Les paramètres enregistrés seront rétablis après autorisation.",
+  },
   accountSettings: {
     loadingProfile: "Chargement",
     profileLoadFailed:

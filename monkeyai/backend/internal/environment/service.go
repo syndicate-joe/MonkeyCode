@@ -9,11 +9,13 @@ import (
 
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/environment/sqlc"
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/resource"
+	"github.com/chaitin/MonkeyCode/monkeyai/backend/license"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service struct {
+	license        license.Reader
 	pool           *pgxpool.Pool
 	runtime        *runtimeConfig
 	disconnect     func(string, string)
@@ -84,6 +86,9 @@ func (s *Service) Create(ctx context.Context, user string, in Creation) (Result,
 	return s.CreateOnHost(ctx, user, "", in)
 }
 func (s *Service) CreateOnHost(ctx context.Context, user, requestedHost string, in Creation) (Result, error) {
+	if err := s.requireCloudComputer(ctx); err != nil {
+		return Result{}, err
+	}
 	selection := in.SpecificationSelection
 	var result Result
 	if !uuid.MatchString(user) || !validName(in.Name) || !key.MatchString(in.RequestKey) || requestedHost != "" && !uuid.MatchString(requestedHost) {
@@ -190,6 +195,11 @@ func (s *Service) CreateOnHost(ctx context.Context, user, requestedHost string, 
 	return result, err
 }
 func (s *Service) Change(ctx context.Context, user *string, id, desired string, in Change) (Result, error) {
+	if desired == "running" {
+		if err := s.requireCloudComputer(ctx); err != nil {
+			return Result{}, err
+		}
+	}
 	var result Result
 	if !uuid.MatchString(id) || in.Generation < 1 || !key.MatchString(in.RequestKey) || (desired != "running" && desired != "stopped" && desired != "deleted") {
 		return result, bad("环境操作参数无效")

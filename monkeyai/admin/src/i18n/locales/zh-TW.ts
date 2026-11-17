@@ -1,6 +1,14 @@
 import { enUS } from "./en-US.ts"
 
 export const zhTW = {
+  licenseCapabilities: {
+    cloudComputer: "雲端電腦",
+    customBranding: "自訂品牌",
+    granted: "已開通",
+    notGranted: "未開通",
+    cloudLocked: "目前授權未開通雲端電腦。既有資源仍可查看、停止和刪除。",
+    brandingLocked: "目前授權未開通自訂品牌。既有設定會保留，重新授權後恢復。",
+  },
   accountSettings: {
     loadingProfile: "正在載入",
     profileLoadFailed: "帳戶設定載入失敗，請重試。",

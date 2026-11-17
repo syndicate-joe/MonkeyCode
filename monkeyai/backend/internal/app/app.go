@@ -204,12 +204,13 @@ func newApplicationHandler(ctx context.Context, logger *slog.Logger, pool *pgxpo
 }
 
 func newApplicationHandlerWithMembers(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, cfg config.Config, users member.UserWriter, groups member.GroupWriter, registrars []AdminRegistrar) (http.Handler, error) {
-	settings := setting.NewService(setting.NewPostgres(pool))
+	capabilities := licenseReader(registrars)
+	settings := setting.NewService(setting.NewPostgres(pool)).WithLicense(capabilities)
 	sessions := sessionreporting.NewService(pool).WithReportingSettings(settings).WithPurgeAuthorizer(func(ctx context.Context) bool {
 		user, ok := identity.UserFromContext(ctx)
 		return ok && user.Role == "admin"
 	})
-	identities := identity.NewService(pool, settings, cfg.PublicURL).WithEmailSender(settings)
+	identities := identity.NewService(pool, settings, cfg.PublicURL).WithEmailSender(settings).WithLicense(capabilities)
 	executions := endpoint.NewExecution(pool, identities)
 	sessions.WithHostAuthorizer(executions)
 	identities.WithUserWriter(users)
@@ -288,7 +289,7 @@ func newApplicationHandlerWithMembers(ctx context.Context, logger *slog.Logger, 
 		}
 		engineHosts.WithEnrollmentKey(key)
 	}
-	environments := environment.NewService(pool).WithBilling(charges)
+	environments := environment.NewService(pool).WithBilling(charges).WithLicense(capabilities)
 	engineHosts.WithCommands(environments)
 	environments.RegisterAdmin(admin)
 	engineHosts.RegisterAdmin(admin)

@@ -1,6 +1,16 @@
 import { enUS } from "./en-US.ts"
 
 export const es419 = {
+  licenseCapabilities: {
+    cloudComputer: "Computadoras en la nube",
+    customBranding: "Marca personalizada",
+    granted: "Autorizado",
+    notGranted: "No autorizado",
+    cloudLocked:
+      "La licencia actual no permite computadoras en la nube. Los recursos existentes se pueden consultar, detener y eliminar.",
+    brandingLocked:
+      "La licencia actual no permite personalizar la marca. La configuración guardada se restaurará al obtener autorización.",
+  },
   accountSettings: {
     loadingProfile: "Cargando",
     profileLoadFailed:

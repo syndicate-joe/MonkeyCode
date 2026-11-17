@@ -463,10 +463,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EmailAuthError"
+  /api/auth/v1/capabilities:
+    get:
+      summary: 读取当前生效的授权能力
+      description: 无需登录，仅返回云电脑和自定义品牌能力，不包含客户、机器列表、有效期、密码或密钥。私有版缺失、无效、未生效、过期或读取失败时均关闭；未接入私有授权的开源入口保持原有能力。响应为 Cache-Control no-store。
+      security: []
+      responses:
+        "200":
+          description: 当前生效的能力
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [allow_cloud_computer, allow_custom_branding]
+                properties:
+                  allow_cloud_computer:
+                    type: boolean
+                    description: 是否允许创建、启动和连接云电脑，不代替用户权限、宿主授权、配额或计费检查。
+                  allow_custom_branding:
+                    type: boolean
+                    description: 是否允许修改和使用团队名称、产品名称及自定义 Logo。
   /api/auth/v1/branding:
     get:
       summary: 读取公开品牌信息
-      description: 公开返回团队名称、产品名称、授权机器码及有效商业授权标记。仅宿主确认合法且当前有效的付费授权时标记为 true；未配置校验器或读取失败时为 false。不会返回授权文件、客户信息、席位、有效期或密钥。
+      description: 公开返回团队名称、产品名称、授权机器码及有效商业授权标记。无自定义品牌能力时返回默认名称和空 Logo，自定义配置保留。仅宿主确认合法且当前有效的付费授权时标记为 true；未配置校验器或读取失败时为 false。不会返回授权文件、客户信息、席位、有效期或密钥。
       security: []
       responses:
         "200":

@@ -46,6 +46,7 @@ func (s *Service) AuthRouter() http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	})
+	router.Get("/capabilities", s.capabilities)
 	router.Get("/branding", s.branding)
 	router.Get("/branding/logo", s.logo)
 	router.Get("/clients", s.clients)

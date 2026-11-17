@@ -1,6 +1,16 @@
 import { enUS } from "./en-US.ts"
 
 export const jaJP = {
+  licenseCapabilities: {
+    cloudComputer: "クラウド PC",
+    customBranding: "ブランドのカスタマイズ",
+    granted: "利用可能",
+    notGranted: "未許可",
+    cloudLocked:
+      "現在のライセンスではクラウド PC を利用できません。既存のリソースの表示、停止、削除は可能です。",
+    brandingLocked:
+      "現在のライセンスではブランドをカスタマイズできません。保存済みの設定は再認証後に復元されます。",
+  },
   accountSettings: {
     loadingProfile: "読み込み中",
     profileLoadFailed:

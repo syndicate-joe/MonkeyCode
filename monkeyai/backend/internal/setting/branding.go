@@ -36,6 +36,9 @@ func (s *Service) WithLogoStorage(storage resource.Storage, publicURL string) *S
 	return s
 }
 func (s *Service) logoKey(ctx context.Context) (string, error) {
+	if !s.customBranding(ctx) {
+		return "", nil
+	}
 	value, err := s.GetValue(ctx, "branding")
 	if err != nil {
 		return "", err
@@ -153,6 +156,9 @@ func (s *Service) discardLogo(r *http.Request, key string) {
 	}
 }
 func (s *Service) uploadLogo(w http.ResponseWriter, r *http.Request) {
+	if !s.requireBranding(w, r) {
+		return
+	}
 	if !parseLogoForm(w, r) {
 		return
 	}
@@ -167,6 +173,9 @@ func (s *Service) uploadLogo(w http.ResponseWriter, r *http.Request) {
 }
 func (s *Service) clearLogo(w http.ResponseWriter, r *http.Request) { s.saveLogo(w, r, "") }
 func (s *Service) saveLogo(w http.ResponseWriter, r *http.Request, key string) bool {
+	if !s.requireBranding(w, r) {
+		return false
+	}
 	store, ok := s.store.(brandingStore)
 	if !ok {
 		settingError(r.Context(), w, 503, "品牌图片存储不可用")
@@ -193,6 +202,9 @@ func (s *Service) writeBranding(w http.ResponseWriter, r *http.Request, record R
 
 // Save names and a staged logo together after the administrator clicks Save.
 func (s *Service) saveBrandingForm(w http.ResponseWriter, r *http.Request) {
+	if !s.requireBranding(w, r) {
+		return
+	}
 	if !parseLogoForm(w, r) {
 		return
 	}

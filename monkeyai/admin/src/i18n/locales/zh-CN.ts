@@ -1,4 +1,12 @@
 export const zhCN = {
+  licenseCapabilities: {
+    cloudComputer: "云电脑",
+    customBranding: "自定义品牌",
+    granted: "已开通",
+    notGranted: "未开通",
+    cloudLocked: "当前授权未开通云电脑。已有资源仍可查看、停止和删除。",
+    brandingLocked: "当前授权未开通自定义品牌。已有配置保留，重新授权后恢复。",
+  },
   kbPermissions: {
     noAccess: "未授权",
     readOnly: "只读",

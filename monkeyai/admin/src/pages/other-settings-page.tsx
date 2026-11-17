@@ -93,6 +93,7 @@ import {
   type BrandLogoDraft,
 } from "@/components/brand-logo-settings"
 import { useBranding } from "@/hooks/use-branding"
+import { useCapabilities } from "@/hooks/use-capabilities"
 
 const OAUTH_PROVIDERS = [
   { value: "github", labelKey: "pages.otherSettings.oauth.providers.github" },
@@ -286,6 +287,8 @@ export function OtherSettingsPage() {
   const { t } = useTranslation()
   const { showToast } = useAppToast()
   const { refreshBranding } = useBranding()
+  const capabilities = useCapabilities()
+  const canCustomizeBranding = capabilities?.allow_custom_branding === true
   const { tags: skillTags, addTag, deleteTag, renameTag } = useSkillTags()
   const [teamName, setTeamName] = useState("Monkey AI")
   const [savedTeamName, setSavedTeamName] = useState("Monkey AI")
@@ -910,14 +913,14 @@ export function OtherSettingsPage() {
           <CardDescription>
             {t("pages.otherSettings.brandInfo.description")}
           </CardDescription>
-          {brandInfoDirty && (
+          {canCustomizeBranding && brandInfoDirty && (
             <CardAction>
               <Button
                 type="button"
                 disabled={brandSaving || !teamName.trim() || !toolName.trim()}
                 loading={brandSaving}
                 onClick={async () => {
-                  if (brandSaving) return
+                  if (brandSaving || !canCustomizeBranding) return
                   setBrandSaving(true)
                   try {
                     if (logoDraft !== null) {
@@ -966,6 +969,11 @@ export function OtherSettingsPage() {
           )}
         </CardHeader>
         <CardContent>
+          {capabilities && !canCustomizeBranding && (
+            <p className="text-sm text-muted-foreground" role="status">
+              {t("licenseCapabilities.brandingLocked")}
+            </p>
+          )}
           <FieldGroup className="grid gap-4 md:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="team-name">
@@ -973,7 +981,7 @@ export function OtherSettingsPage() {
               </FieldLabel>
               <Input
                 id="team-name"
-                disabled={brandSaving}
+                disabled={brandSaving || !canCustomizeBranding}
                 value={teamName}
                 onChange={(event) => setTeamName(event.target.value)}
               />
@@ -984,7 +992,7 @@ export function OtherSettingsPage() {
               </FieldLabel>
               <Input
                 id="tool-name"
-                disabled={brandSaving}
+                disabled={brandSaving || !canCustomizeBranding}
                 value={toolName}
                 onChange={(event) => setToolName(event.target.value)}
               />
@@ -993,7 +1001,7 @@ export function OtherSettingsPage() {
               <BrandLogoSettings
                 value={logoDraft}
                 onValueChange={setLogoDraft}
-                disabled={brandSaving}
+                disabled={brandSaving || !canCustomizeBranding}
                 loading={brandSaving && logoDraft !== null}
               />
             </div>
