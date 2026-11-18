@@ -19,7 +19,7 @@ func TestReadCapabilities(t *testing.T) {
 		reader Reader
 		want   Capabilities
 	}{
-		{nil, all},
+		{nil, Capabilities{}},
 		{source{value: all}, all},
 		{source{}, Capabilities{}},
 		{source{value: all, err: errors.New("unavailable")}, Capabilities{}},

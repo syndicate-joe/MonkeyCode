@@ -16,7 +16,7 @@
 
 ## Admin 自定义 Logo
 
-品牌信息保存在 `settings` 表 `key = 'branding'` 的 JSONB `value` 中。图片存入现有对象存储，内部引用字段为 `logo_s3_key`；公开接口、管理员设置响应均只返回派生的 `logo_url`，不返回存储 key。未设置时 `logo_url` 为空字符串，旧接口缺少字段或图片加载失败时，页面均回退内置默认图片。
+自定义品牌由 Pro 模块提供，开源版不提供其写入接口。品牌信息保存在 `settings` 表 `key = 'branding'` 的 JSONB `value` 中。图片存入现有对象存储，内部引用字段为 `logo_s3_key`；公开接口、管理员设置响应均只返回派生的 `logo_url`，不返回存储 key。未设置时 `logo_url` 为空字符串，旧接口缺少字段或图片加载失败时，页面均回退内置默认图片。
 
 - `PUT /api/admin/v1/settings/branding/logo`：管理员以 multipart `logo` 文件上传 PNG、JPG/JPEG、WebP、GIF、BMP 或 TIFF，最大 1 MiB，不限制像素尺寸。服务器完整解码并重新编码为 PNG，GIF/TIFF 使用首帧，成功后立即生效，返回品牌设置记录。
 - `DELETE /api/admin/v1/settings/branding/logo`：管理员清除自定义引用，保留名称，返回空 `value.logo_url`。
@@ -43,9 +43,9 @@ PublicLicense(context.Context) (machineCode string, hasCommercialLicense bool, e
 
 每次 branding 请求都会重新调用该接口，不在启动时缓存授权有效性。没有提供此扩展时，机器码返回空字符串，商业授权标记返回 `false`。
 
-私有宿主的 `license.Handler` 已实现此接口，复用实际许可证校验，不根据品牌配置推断付费状态。同时实现 `backend/license.Reader`，由宿主扩展装配到身份、设置与云环境服务。
+私有宿主的 `license.Handler` 已实现此接口，复用实际许可证校验，不根据品牌配置推断付费状态。同时实现 `backend/license.Reader`。Pro 的商业模块通过 `extension.Module` 装配自定义品牌、Logo 和云电脑实现；开源侧只保留默认品牌读取与必要契约，缺少模块或授权源时默认关闭。
 
-`GET /api/auth/v1/capabilities` 仅公开返回当前生效的 `allow_cloud_computer` 和 `allow_custom_branding`，不包含授权详情。自定义品牌能力关闭时，公开品牌与 Agent 设置返回默认名称，Logo 返回 404；保存名称、上传、替换和清除 Logo 返回 403 `custom_branding_not_licensed`。原配置和图片保留，重新授权后恢复。商业授权标记与品牌能力分别判断，未接入私有授权的开源入口维持原有品牌能力。管理端定期及授权变更后刷新，不缓存到启动时。
+`GET /api/auth/v1/capabilities` 仅公开返回当前生效的 `allow_cloud_computer` 和 `allow_custom_branding`，不包含授权详情。自定义品牌能力关闭时，公开品牌与 Agent 设置返回默认名称，Logo 返回 404；保存名称、上传、替换和清除 Logo 返回 403 `custom_branding_not_licensed`。原配置和图片保留，重新授权后恢复。商业授权标记与品牌能力分别判断，未装配商业模块的开源入口只返回默认品牌，不注册自定义 Logo 路由；通用设置入口不能修改品牌。管理端定期及授权变更后刷新，不缓存到启动时。
 
 ## 首页行为
 

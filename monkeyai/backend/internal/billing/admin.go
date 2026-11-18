@@ -15,6 +15,7 @@ import (
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/billing/sqlc"
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/identity"
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/resource"
+	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/rootgroup"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -225,7 +226,7 @@ func (s *Service) quotas(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	var teamName string
-	teamName, err = sqlc.New(s.pool).WorkspaceName(r.Context())
+	teamName, err = rootgroup.Name(r.Context(), s.pool)
 
 	if err != nil {
 		resource.Fail(r.Context(), w, err)

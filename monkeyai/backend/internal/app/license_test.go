@@ -20,7 +20,10 @@ func TestLicenseReaderUsesHostExtension(t *testing.T) {
 		t.Fatal("开源入口不应自动创建私有授权源")
 	}
 	host := &capabilityHost{license.Capabilities{AllowCustomBranding: true}}
-	reader := licenseReader([]AdminRegistrar{nil, host})
+	if licenseReader([]AdminRegistrar{host}) != nil {
+		t.Fatal("未装配商业模块不应公开启用能力")
+	}
+	reader := licenseReader([]AdminRegistrar{nil, host, &moduleStub{}})
 	if reader != host {
 		t.Fatal("没有接入宿主授权源")
 	}

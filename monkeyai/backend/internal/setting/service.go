@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/chaitin/MonkeyCode/monkeyai/backend/internal/resource"
-	"github.com/chaitin/MonkeyCode/monkeyai/backend/license"
 )
 
 var Keys = []string{"branding", "authentication", "email", "billing", "session_reporting", "proxies", "mcp"}
@@ -38,10 +37,8 @@ type Store interface {
 }
 
 type Service struct {
-	license     license.Reader
-	store       Store
-	logoStorage resource.Storage
-	publicURL   string
+	store    Store
+	branding BrandingReader
 }
 
 func NewService(store Store) *Service {
@@ -56,8 +53,8 @@ func (s *Service) Get(ctx context.Context, key string) (Record, error) {
 }
 
 func (s *Service) GetValue(ctx context.Context, key string) (json.RawMessage, error) {
-	if key == "branding" && !s.customBranding(ctx) {
-		return append(json.RawMessage(nil), defaultBranding...), nil
+	if key == "branding" {
+		return s.brandingValue(ctx)
 	}
 	record, err := s.Get(ctx, key)
 	if errors.Is(err, ErrNotFound) {
@@ -78,8 +75,8 @@ func (s *Service) List(ctx context.Context) ([]Record, error) {
 }
 
 func (s *Service) Put(ctx context.Context, key string, value json.RawMessage, schemaVersion int, userID string) (Record, error) {
-	if key == "branding" && !s.customBranding(ctx) {
-		return Record{}, ErrBrandingNotLicensed
+	if key == "branding" {
+		return Record{}, ErrUnknownKey
 	}
 	if !slices.Contains(Keys, key) {
 		return Record{}, ErrUnknownKey
@@ -96,15 +93,6 @@ func (s *Service) Put(ctx context.Context, key string, value json.RawMessage, sc
 			slog.WarnContext(ctx, "操作失败", "module", "setting", "operation", "Put", "error", err)
 		}
 		return Record{}, errors.New("value 必须是 JSON 对象")
-	}
-	if key == "branding" {
-		delete(object, "logo_s3_key")
-		delete(object, "logo_url")
-		var err error
-		value, err = json.Marshal(object)
-		if err != nil {
-			return Record{}, err
-		}
 	}
 	if key == "authentication" {
 		if raw, ok := object["oauth_connections"]; ok {
@@ -205,7 +193,7 @@ func (s *Service) AdminGet(ctx context.Context, key string) (Record, error) {
 	if err != nil {
 		return Record{}, err
 	}
-	return s.adminRecord(record)
+	return s.adminRecord(ctx, record)
 }
 
 func (s *Service) AdminList(ctx context.Context) ([]Record, error) {
@@ -214,7 +202,7 @@ func (s *Service) AdminList(ctx context.Context) ([]Record, error) {
 		return nil, err
 	}
 	for index := range records {
-		records[index], err = s.adminRecord(records[index])
+		records[index], err = s.adminRecord(ctx, records[index])
 		if err != nil {
 			return nil, err
 		}
@@ -231,7 +219,7 @@ func (s *Service) AgentConfig(ctx context.Context) (Config, error) {
 	config := Config{Settings: make(map[string]json.RawMessage)}
 	seenSessionReporting := false
 	for _, record := range records {
-		if record.Key == "proxies" || record.Key == "mcp" {
+		if record.Key == "branding" || record.Key == "proxies" || record.Key == "mcp" {
 			continue
 		}
 		value, err := redact(record.Key, record.Value)
@@ -278,9 +266,11 @@ func (s *Service) AgentConfig(ctx context.Context) (Config, error) {
 	if !seenSessionReporting {
 		config.Settings["session_reporting"] = append(json.RawMessage(nil), defaultSessionReporting...)
 	}
-	if !s.customBranding(ctx) {
-		config.Settings["branding"] = append(json.RawMessage(nil), defaultBranding...)
+	branding, err := s.brandingValue(ctx)
+	if err != nil {
+		return Config{}, err
 	}
+	config.Settings["branding"] = branding
 	config.Version = config.UpdatedAt.UnixMilli()
 	return config, nil
 }
@@ -291,9 +281,6 @@ func redact(key string, value json.RawMessage) (json.RawMessage, error) {
 		return nil, err
 	}
 	switch key {
-	case "branding":
-		delete(object, "logo_s3_key")
-		delete(object, "logo_url")
 	case "authentication":
 		connections, _ := object["oauth_connections"].([]any)
 		for _, item := range connections {
@@ -333,10 +320,6 @@ func (s *Service) mergeSecrets(ctx context.Context, key string, value json.RawMe
 		return nil, fmt.Errorf("解析已有 %s 设置: %w", key, err)
 	}
 	switch key {
-	case "branding":
-		if logo, ok := previous["logo_s3_key"]; ok {
-			next["logo_s3_key"] = logo
-		}
 	case "authentication":
 		previousByID := make(map[string]map[string]any)
 		for _, item := range anySlice(previous["oauth_connections"]) {
@@ -388,10 +371,6 @@ func validate(key string, value map[string]json.RawMessage) error {
 		level := rawString(value["level"])
 		if level != "stats" && level != "full" {
 			return errors.New("session_reporting.level 必须为 stats 或 full")
-		}
-	case "branding":
-		if rawString(value["workspace_name"]) == "" || rawString(value["product_name"]) == "" {
-			return errors.New("workspace_name 和 product_name 不能为空")
 		}
 	case "authentication":
 		for _, key := range []string{"password_enabled", "email_code_enabled", "email_code_auto_registration_enabled"} {

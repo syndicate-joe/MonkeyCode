@@ -134,29 +134,29 @@ func (s *Service) WithUserWriter(writer member.UserWriter) *Service {
 }
 
 type Service struct {
-	license         license.Reader
-	runtimeAccess   RuntimeAccess
-	device          *deviceAuthorization
-	email           EmailSender
-	accounts        AccountPreserver
-	writer          member.UserWriter
-	avatars         ProfileStorage
-	db              *pgxpool.Pool
-	settings        SettingReader
-	publicLicense   PublicLicenseReader
-	brandingLogo    BrandingLogoReader
-	client          *http.Client
-	publicURL       string
-	secureCookie    bool
-	now             func() time.Time
-	sessionTTL      time.Duration
-	requestTTL      time.Duration
-	codeTTL         time.Duration
-	accessTTL       time.Duration
-	grantRevoker    func(string)
-	runtimeFeatures func(context.Context) (map[string]bool, error)
-	runtimeMetadata map[string]any
-	refreshTTL      time.Duration
+	license          license.Reader
+	runtimeAccess    RuntimeAccess
+	device           *deviceAuthorization
+	email            EmailSender
+	accounts         AccountPreserver
+	writer           member.UserWriter
+	avatars          ProfileStorage
+	db               *pgxpool.Pool
+	settings         SettingReader
+	brandingProvider PublicBrandingReader
+	publicLicense    PublicLicenseReader
+	client           *http.Client
+	publicURL        string
+	secureCookie     bool
+	now              func() time.Time
+	sessionTTL       time.Duration
+	requestTTL       time.Duration
+	codeTTL          time.Duration
+	accessTTL        time.Duration
+	grantRevoker     func(string)
+	runtimeFeatures  func(context.Context) (map[string]bool, error)
+	runtimeMetadata  map[string]any
+	refreshTTL       time.Duration
 }
 
 func NewService(db *pgxpool.Pool, settings SettingReader, publicURL string) *Service {

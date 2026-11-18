@@ -28,7 +28,7 @@ paths:
   /api/auth/v1/capabilities:
     get:
       summary: 读取当前生效的授权能力
-      description: 无需登录，仅返回云电脑和自定义品牌能力。私有版缺失、无效、未生效、过期或读取失败时均关闭；未接入私有授权的开源入口保持原有能力。响应为 Cache-Control no-store，不包含客户、机器列表、密码或密钥。
+      description: 无需登录，仅返回云电脑和自定义品牌能力。私有版缺失、无效、未生效、过期或读取失败时均关闭；未装配商业模块或授权源的开源入口返回两个 false，不提供云电脑和自定义品牌写入。响应为 Cache-Control no-store，不包含客户、机器列表、密码或密钥。
       security: []
       responses:
         '200':
