@@ -34,7 +34,7 @@ type RuntimeReadiness interface {
 	RuntimeReady(context.Context, string, string) (bool, error)
 }
 type Credits interface {
-	ComputeEnabled(context.Context, pgx.Tx) (bool, error)
+	CheckComputeMode(context.Context, pgx.Tx) error
 	ComputeAccount(context.Context, pgx.Tx, string, time.Time) (billing.Account, error)
 	ChargeCompute(context.Context, pgx.Tx, billing.ComputeCharge) error
 }

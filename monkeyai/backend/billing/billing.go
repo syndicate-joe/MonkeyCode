@@ -11,6 +11,7 @@ type ComputeCharge = core.ComputeCharge
 type Service = core.Service
 
 var ErrComputeInsufficientCredits = core.ErrComputeInsufficientCredits
+var ErrComputeModeUnavailable = core.ErrComputeModeUnavailable
 
 func ParseAmount(value string) (Amount, error) { return core.ParseAmount(value) }
 func NewService(pool *pgxpool.Pool) *Service   { return core.NewService(pool) }
